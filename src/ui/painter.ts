@@ -7,6 +7,7 @@ export interface PainterState {
   cursorY: number
   cursorVisible: boolean
   activeBiome: BiomeType
+  mode: 'paint' | 'inspect'
 }
 
 /** Sélecteurs des éléments UI à exclure du painting (sinon on peint en draguant un slider) */
@@ -18,6 +19,37 @@ export function setupPainter(
   state: PainterState,
 ): void {
   let painting = false
+
+  const btnRiver   = document.getElementById('btn-biome-river')!
+  const btnPrairie = document.getElementById('btn-biome-prairie')!
+  const btnInspect = document.getElementById('btn-inspect')!
+
+  const setCursor = () => {
+    canvas.style.cursor = state.mode === 'inspect' ? 'crosshair' : 'none'
+  }
+
+  const updateButtonStates = () => {
+    if (state.mode === 'inspect') {
+      btnInspect.classList.add('active')
+      btnRiver.classList.remove('active')
+      btnPrairie.classList.remove('active')
+    } else {
+      btnInspect.classList.remove('active')
+      if (state.activeBiome === BIOME.WATER) {
+        btnRiver.classList.add('active')
+        btnPrairie.classList.remove('active')
+      } else {
+        btnPrairie.classList.add('active')
+        btnRiver.classList.remove('active')
+      }
+    }
+  }
+
+  const setMode = (mode: 'paint' | 'inspect') => {
+    state.mode = mode
+    setCursor()
+    updateButtonStates()
+  }
 
   const getPos = (clientX: number, clientY: number) => {
     const rect = canvas.getBoundingClientRect()
@@ -36,6 +68,7 @@ export function setupPainter(
   // ── Souris — sur document pour traverser les overlays ─────────────────────
   document.addEventListener('mousedown', e => {
     if (e.button !== 0) return
+    if (state.mode !== 'paint') return
     if (isUITarget(e)) return
     if (!isInCanvas(e.clientX, e.clientY)) return
     painting = true
@@ -48,8 +81,8 @@ export function setupPainter(
     const { x, y } = getPos(e.clientX, e.clientY)
     state.cursorX = x
     state.cursorY = y
-    state.cursorVisible = inCanvas
-    if (painting && inCanvas) biomeMap.paint(x, y, BRUSH_RADIUS, state.activeBiome)
+    state.cursorVisible = inCanvas && state.mode === 'paint'
+    if (painting && inCanvas && state.mode === 'paint') biomeMap.paint(x, y, BRUSH_RADIUS, state.activeBiome)
   })
 
   document.addEventListener('mouseup', () => { painting = false })
@@ -57,6 +90,7 @@ export function setupPainter(
   // ── Touch ─────────────────────────────────────────────────────────────────
   canvas.addEventListener('touchstart', e => {
     e.preventDefault()
+    if (state.mode !== 'paint') return
     painting = true
     const touch = e.touches[0]
     const { x, y } = getPos(touch.clientX, touch.clientY)
@@ -65,6 +99,7 @@ export function setupPainter(
 
   canvas.addEventListener('touchmove', e => {
     e.preventDefault()
+    if (state.mode !== 'paint') return
     if (!painting) return
     const touch = e.touches[0]
     const { x, y } = getPos(touch.clientX, touch.clientY)
@@ -76,18 +111,28 @@ export function setupPainter(
   canvas.addEventListener('touchend', () => { painting = false })
 
   // ── Boutons de biome ──────────────────────────────────────────────────────
-  const btnRiver   = document.getElementById('btn-biome-river')!
-  const btnPrairie = document.getElementById('btn-biome-prairie')!
-
   btnRiver.addEventListener('click', () => {
     state.activeBiome = BIOME.WATER
-    btnRiver.classList.add('active')
-    btnPrairie.classList.remove('active')
+    setMode('paint')
   })
 
   btnPrairie.addEventListener('click', () => {
     state.activeBiome = BIOME.PRAIRIE
-    btnRiver.classList.remove('active')
-    btnPrairie.classList.add('active')
+    setMode('paint')
   })
+
+  btnInspect.addEventListener('click', () => {
+    setMode(state.mode === 'inspect' ? 'paint' : 'inspect')
+  })
+
+  // ── Raccourci clavier ─────────────────────────────────────────────────────
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey) return
+    if (e.key === 'i' || e.key === 'I') {
+      setMode(state.mode === 'inspect' ? 'paint' : 'inspect')
+    }
+  })
+
+  // Appliquer l'état initial (boutons + curseur)
+  setMode(state.mode)
 }

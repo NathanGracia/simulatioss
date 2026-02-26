@@ -44,7 +44,11 @@ export class World {
   }
 
   private randomPos(): Vec2 {
-    return new Vec2(Math.random() * this.width, Math.random() * this.height)
+    const m = CONFIG.WALL_MARGIN
+    return new Vec2(
+      m + Math.random() * (this.width  - 2 * m),
+      m + Math.random() * (this.height - 2 * m),
+    )
   }
 
   private randomPosOnLand(): Vec2 {
@@ -116,9 +120,10 @@ export class World {
       if (this.plants.length + newPlants.length < CONFIG.PLANT_MAX_COUNT) {
         const spreadPos = plant.trySpread()
         if (spreadPos) {
+          const m = CONFIG.WALL_MARGIN
           const clampedPos = new Vec2(
-            Math.max(0, Math.min(this.width, spreadPos.x)),
-            Math.max(0, Math.min(this.height, spreadPos.y)),
+            Math.max(m, Math.min(this.width  - m, spreadPos.x)),
+            Math.max(m, Math.min(this.height - m, spreadPos.y)),
           )
           // Germe seulement en prairie proche de la rivière
           if (

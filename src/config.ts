@@ -67,6 +67,13 @@ export const CONFIG = {
   // Stats graph
   STATS_HISTORY_LENGTH: 200,
 
+  // Bords
+  WALL_MARGIN: 20,   // px — zone de répulsion + interdite au spawn
+
   // Simulation
   TARGET_FPS: 60,
+
+  // Génétique
+  MUTATION_RATE: 0.5,       // probabilité de mutation par gène
+  MUTATION_STRENGTH: 0.35,  // amplitude max ±35% de la valeur courante
 }

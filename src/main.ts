@@ -4,6 +4,7 @@ import { StatsGraph } from './ui/stats'
 import { setupControls, updateCounters, SimControls } from './ui/controls'
 import { setupSettingsPanel, loadSavedConfig } from './ui/settings'
 import { setupPainter, PainterState } from './ui/painter'
+import { setupInspector } from './ui/inspector'
 import { BIOME } from './biomeMap'
 import { CONFIG } from './config'
 
@@ -46,8 +47,10 @@ const painterState: PainterState = {
   cursorX: 0, cursorY: 0,
   cursorVisible: false,
   activeBiome: BIOME.WATER,
+  mode: 'inspect',
 }
 setupPainter(canvas, world.biomeMap, painterState)
+setupInspector(canvas, world, painterState)
 
 let lastTime = 0
 const TICK_MS = 1000 / CONFIG.TARGET_FPS

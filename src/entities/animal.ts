@@ -1,5 +1,6 @@
 import { Vec2 } from '../math/vec2'
 import { Entity, EntityType } from './entity'
+import { Genome } from '../genetics/genome'
 // Importé ici pour le typage uniquement (pas de dépendance circulaire)
 
 export abstract class Animal extends Entity {
@@ -10,6 +11,8 @@ export abstract class Animal extends Entity {
   reprCooldown: number
   reprTimer: number
   wanderAngle: number
+  genome: Genome
+  mutationGlow: number = 0
   // Cache de chemin A*
   cachedPath: Vec2[] = []
   pathTargetPos: Vec2 | null = null
@@ -25,6 +28,7 @@ export abstract class Animal extends Entity {
     visionRadius: number,
     reprThreshold: number,
     reprCooldown: number,
+    genome: Genome,
   ) {
     super(type, pos, energy)
     this.maxSpeed = maxSpeed
@@ -34,5 +38,6 @@ export abstract class Animal extends Entity {
     this.reprCooldown = reprCooldown
     this.reprTimer = Math.floor(Math.random() * reprCooldown) // stagger
     this.wanderAngle = Math.random() * Math.PI * 2
+    this.genome = genome
   }
 }

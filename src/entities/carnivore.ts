@@ -1,28 +1,35 @@
 import { Vec2 } from '../math/vec2'
 import { Animal } from './animal'
 import { CONFIG } from '../config'
+import { Genome, defaultGenome, crossover, mutate, mutationDistance } from '../genetics/genome'
 
 export class Carnivore extends Animal {
   hungerThreshold: number
   reprCostEnergy: number
 
-  constructor(pos: Vec2, energy = CONFIG.CARNIVORE_ENERGY_INIT) {
+  constructor(pos: Vec2, energy = CONFIG.CARNIVORE_ENERGY_INIT, genome?: Genome) {
+    const g = genome ?? defaultGenome('carnivore')
     super(
       'carnivore',
       pos,
       energy,
-      CONFIG.CARNIVORE_SPEED,
+      g.speed,
       CONFIG.CARNIVORE_ENERGY_MAX,
-      CONFIG.CARNIVORE_VISION,
+      g.visionRadius,
       CONFIG.CARNIVORE_REPR_THRESHOLD,
-      CONFIG.CARNIVORE_REPR_COOLDOWN,
+      g.reprCooldown,
+      g,
     )
     this.hungerThreshold = CONFIG.CARNIVORE_HUNGER_THRESHOLD
-    this.reprCostEnergy = CONFIG.CARNIVORE_REPR_COST
+    this.reprCostEnergy = g.reprCostEnergy
   }
 
-  spawnOffspring(): Carnivore {
+  spawnOffspring(partnerGenome: Genome): Carnivore {
     const offset = Vec2.random().scale(10)
-    return new Carnivore(this.pos.add(offset), this.energy * 0.4)
+    const crossed = crossover(this.genome, partnerGenome)
+    const childGenome = mutate(crossed, 'carnivore')
+    const child = new Carnivore(this.pos.add(offset), this.energy * 0.4, childGenome)
+    child.mutationGlow = Math.min(1, mutationDistance(childGenome, crossed) * 3)
+    return child
   }
 }

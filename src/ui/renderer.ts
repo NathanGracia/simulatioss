@@ -2,6 +2,7 @@ import { World } from '../world'
 import { CONFIG } from '../config'
 import { BIOME } from '../biomeMap'
 import { PainterState, BRUSH_RADIUS } from './painter'
+import { herbivoreHSL, carnivoreHSL } from './entityColor'
 
 const TAU = Math.PI * 2
 const RIPPLE_PERIOD = 55   // ticks par cycle d'onde
@@ -273,23 +274,61 @@ export class Renderer {
     }
     ctx.globalAlpha = 1
 
-    // --- Herbivores ---
-    ctx.shadowColor = '#3b82f6'
-    ctx.shadowBlur = 12
+    // --- Mutation rings ---
+    ctx.lineWidth = 1.5
+    ctx.shadowBlur = 10
     for (const herb of world.herbivores) {
+      if (herb.mutationGlow <= 0.04) continue
       const t = Math.max(0, herb.energy / herb.maxEnergy)
+      const [hue] = herbivoreHSL(herb.genome, t)
       const x = herb.pos.x
       const y = herb.pos.y
-      const r = CONFIG.HERBIVORE_RADIUS
+      const r = Math.max(3.5, Math.min(9, CONFIG.HERBIVORE_RADIUS + (herb.genome.speed - CONFIG.HERBIVORE_SPEED) * 0.8))
+      const pulse = 0.5 + 0.5 * Math.sin(world.tick * 0.13 + herb.id * 0.5)
+      ctx.shadowColor = `hsl(${hue}, 80%, 65%)`
+      ctx.globalAlpha = herb.mutationGlow * 0.8
+      ctx.strokeStyle = `hsl(${hue}, 65%, 85%)`
+      ctx.beginPath()
+      ctx.arc(x, y, r + 3.5 + pulse * 2.5, 0, TAU)
+      ctx.stroke()
+    }
+    for (const carn of world.carnivores) {
+      if (carn.mutationGlow <= 0.04) continue
+      const t = Math.max(0, carn.energy / carn.maxEnergy)
+      const [hue] = carnivoreHSL(carn.genome, t)
+      const x = carn.pos.x
+      const y = carn.pos.y
+      const r = Math.max(5.5, Math.min(12, CONFIG.CARNIVORE_RADIUS + (carn.genome.visionRadius - CONFIG.CARNIVORE_VISION) * 0.012))
+      const pulse = 0.5 + 0.5 * Math.sin(world.tick * 0.13 + carn.id * 0.5)
+      ctx.shadowColor = `hsl(${hue}, 80%, 65%)`
+      ctx.globalAlpha = carn.mutationGlow * 0.8
+      ctx.strokeStyle = `hsl(${hue}, 65%, 85%)`
+      ctx.beginPath()
+      ctx.arc(x, y, r + 3.5 + pulse * 2.5, 0, TAU)
+      ctx.stroke()
+    }
+    ctx.shadowBlur = 0
+    ctx.globalAlpha = 1
+
+    // --- Herbivores ---
+    for (const herb of world.herbivores) {
+      const t = Math.max(0, herb.energy / herb.maxEnergy)
+      const [hue, sat, l] = herbivoreHSL(herb.genome, t)
+      const x = herb.pos.x
+      const y = herb.pos.y
+      const r = Math.max(3.5, Math.min(9, CONFIG.HERBIVORE_RADIUS + (herb.genome.speed - CONFIG.HERBIVORE_SPEED) * 0.8))
+
+      ctx.shadowColor = `hsl(${hue}, 85%, 65%)`
+      ctx.shadowBlur = 12
       ctx.globalAlpha = 0.25 + 0.75 * t
-      ctx.fillStyle = `hsl(215, ${35 + t * 50}%, ${25 + t * 36}%)`
+      ctx.fillStyle = `hsl(${hue}, ${sat}%, ${l}%)`
       ctx.beginPath()
       ctx.arc(x, y, r, 0, TAU)
       ctx.fill()
 
       ctx.shadowBlur = 0
       ctx.globalAlpha = t * 0.5
-      ctx.fillStyle = '#bfdbfe'
+      ctx.fillStyle = `hsl(${hue}, 60%, 85%)`
       ctx.beginPath()
       ctx.arc(x - r * 0.28, y - r * 0.32, r * 0.38, 0, TAU)
       ctx.fill()
@@ -309,17 +348,19 @@ export class Renderer {
     ctx.shadowBlur = 0
 
     // --- Carnivores ---
-    ctx.shadowColor = '#f97316'
-    ctx.shadowBlur = 16
     for (const carn of world.carnivores) {
       const t = Math.max(0, carn.energy / carn.maxEnergy)
+      const [hue, sat, l] = carnivoreHSL(carn.genome, t)
       const x = carn.pos.x
       const y = carn.pos.y
       const spd = carn.vel.length()
       const angle = spd > 0.08 ? Math.atan2(carn.vel.y, carn.vel.x) : carn.wanderAngle
-      const r = CONFIG.CARNIVORE_RADIUS
+      const r = Math.max(5.5, Math.min(12, CONFIG.CARNIVORE_RADIUS + (carn.genome.visionRadius - CONFIG.CARNIVORE_VISION) * 0.012))
+
+      ctx.shadowColor = `hsl(${hue}, 85%, 65%)`
+      ctx.shadowBlur = 16
       ctx.globalAlpha = 0.3 + 0.7 * t
-      ctx.fillStyle = `hsl(${22 - t * 14}, ${40 + t * 50}%, ${28 + t * 30}%)`
+      ctx.fillStyle = `hsl(${hue}, ${sat}%, ${l}%)`
 
       ctx.save()
       ctx.translate(x, y)
@@ -332,8 +373,8 @@ export class Renderer {
 
       if (t > 0.1) {
         ctx.shadowBlur = 0
-        ctx.globalAlpha = (t - 0.1) * 0.6
-        ctx.fillStyle = '#fef3c7'
+        ctx.globalAlpha = (t - 0.1) * 0.85
+        ctx.fillStyle = '#ff2020'
         ctx.beginPath()
         ctx.arc(r * 0.18, 0, r * 0.38, 0, TAU)
         ctx.fill()

@@ -18,7 +18,7 @@ export function tryReproduceHerbivore(
     if (herb.pos.dist(other.pos) <= CONFIG.REPR_DISTANCE) {
       herb.energy -= herb.reprCostEnergy
       herb.reprTimer = herb.reprCooldown
-      return herb.spawnOffspring()
+      return herb.spawnOffspring(other.genome)
     }
   }
   return null
@@ -39,7 +39,7 @@ export function tryReproduceCarnivore(
     if (carn.pos.dist(other.pos) <= CONFIG.REPR_DISTANCE) {
       carn.energy -= carn.reprCostEnergy
       carn.reprTimer = carn.reprCooldown
-      return carn.spawnOffspring()
+      return carn.spawnOffspring(other.genome)
     }
   }
   return null
