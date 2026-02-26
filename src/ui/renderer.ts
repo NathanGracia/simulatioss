@@ -418,16 +418,40 @@ export class Renderer {
     // Heatmap d'activité (screen blend — glow de chaleur)
     heatmap?.render(ctx, W, H)
 
-    // Curseur de pinceau
+    // Curseur de pinceau / spawn
     if (painter.cursorVisible) {
       ctx.shadowBlur = 0
       ctx.lineWidth = 1.5
-      ctx.strokeStyle = painter.activeBiome === BIOME.WATER ? '#7dd3fc' : '#86efac'
-      ctx.globalAlpha = 0.8
+      ctx.globalAlpha = 0.85
       ctx.setLineDash([4, 3])
-      ctx.beginPath()
-      ctx.arc(painter.cursorX, painter.cursorY, BRUSH_RADIUS, 0, TAU)
-      ctx.stroke()
+
+      const mode = painter.mode
+      if (mode === 'spawn-plant' || mode === 'spawn-herb' || mode === 'spawn-carn') {
+        const color = mode === 'spawn-plant' ? '#4ade80'
+                    : mode === 'spawn-herb'  ? '#60a5fa'
+                    :                          '#fb923c'
+        const r = mode === 'spawn-plant' ? 10 : mode === 'spawn-herb' ? 14 : 18
+        ctx.strokeStyle = color
+        ctx.shadowColor = color
+        ctx.shadowBlur = 6
+        ctx.beginPath()
+        ctx.arc(painter.cursorX, painter.cursorY, r, 0, TAU)
+        ctx.stroke()
+        // Point central
+        ctx.setLineDash([])
+        ctx.fillStyle = color
+        ctx.globalAlpha = 0.5
+        ctx.beginPath()
+        ctx.arc(painter.cursorX, painter.cursorY, 2.5, 0, TAU)
+        ctx.fill()
+      } else {
+        ctx.strokeStyle = painter.activeBiome === BIOME.WATER ? '#7dd3fc' : '#86efac'
+        ctx.beginPath()
+        ctx.arc(painter.cursorX, painter.cursorY, BRUSH_RADIUS, 0, TAU)
+        ctx.stroke()
+      }
+
+      ctx.shadowBlur = 0
       ctx.setLineDash([])
       ctx.globalAlpha = 1
     }

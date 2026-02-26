@@ -4,6 +4,10 @@ import { StatsGraph } from './ui/stats'
 import { setupControls, updateCounters, updateSeason, SimControls } from './ui/controls'
 import { setupSettingsPanel, loadSavedConfig } from './ui/settings'
 import { setupPainter, PainterState } from './ui/painter'
+import { Vec2 } from './math/vec2'
+import { Plant } from './entities/plant'
+import { Herbivore } from './entities/herbivore'
+import { Carnivore } from './entities/carnivore'
 import { setupInspector, TrackState } from './ui/inspector'
 import { GeneticHistory, setupGeneticModal } from './ui/geneticGraph'
 import { HeatmapSystem } from './ui/heatmap'
@@ -55,7 +59,11 @@ const painterState: PainterState = {
   activeBiome: BIOME.WATER,
   mode: 'inspect',
 }
-setupPainter(canvas, world.biomeMap, painterState)
+setupPainter(canvas, world.biomeMap, painterState, {
+  spawnPlant(x, y) { world.plants.push(new Plant(new Vec2(x, y))) },
+  spawnHerb(x, y)  { world.herbivores.push(new Herbivore(new Vec2(x, y))) },
+  spawnCarn(x, y)  { world.carnivores.push(new Carnivore(new Vec2(x, y))) },
+})
 const track: TrackState = setupInspector(canvas, world, painterState)
 
 const geneHistory = new GeneticHistory()

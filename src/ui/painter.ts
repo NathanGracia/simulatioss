@@ -2,50 +2,62 @@ import { BiomeMap, BiomeType, BIOME } from '../biomeMap'
 
 export const BRUSH_RADIUS = 28
 
+export type PainterMode = 'paint' | 'inspect' | 'spawn-plant' | 'spawn-herb' | 'spawn-carn'
+
 export interface PainterState {
   cursorX: number
   cursorY: number
   cursorVisible: boolean
   activeBiome: BiomeType
-  mode: 'paint' | 'inspect'
+  mode: PainterMode
 }
 
-/** Sélecteurs des éléments UI à exclure du painting (sinon on peint en draguant un slider) */
+export interface SpawnCallbacks {
+  spawnPlant(x: number, y: number): void
+  spawnHerb(x: number, y: number): void
+  spawnCarn(x: number, y: number): void
+}
+
+/** Distance min entre deux spawns pendant un drag */
+const SPAWN_DRAG_DIST = 40
+
+/** Sélecteurs des éléments UI à exclure du painting */
 const UI_SELECTOR = '#ui-overlay, #settings-panel, #settings-toggle'
 
 export function setupPainter(
   canvas: HTMLCanvasElement,
   biomeMap: BiomeMap,
   state: PainterState,
+  spawner: SpawnCallbacks,
 ): void {
   let painting = false
+  let lastSpawnX = -Infinity
+  let lastSpawnY = -Infinity
 
-  const btnRiver   = document.getElementById('btn-biome-river')!
-  const btnPrairie = document.getElementById('btn-biome-prairie')!
-  const btnInspect = document.getElementById('btn-inspect')!
+  const btnRiver      = document.getElementById('btn-biome-river')!
+  const btnPrairie    = document.getElementById('btn-biome-prairie')!
+  const btnInspect    = document.getElementById('btn-inspect')!
+  const btnSpawnPlant = document.getElementById('btn-spawn-plant')!
+  const btnSpawnHerb  = document.getElementById('btn-spawn-herb')!
+  const btnSpawnCarn  = document.getElementById('btn-spawn-carn')!
+
+  const isSpawnMode = () => state.mode.startsWith('spawn')
 
   const setCursor = () => {
     canvas.style.cursor = state.mode === 'inspect' ? 'crosshair' : 'none'
   }
 
   const updateButtonStates = () => {
-    if (state.mode === 'inspect') {
-      btnInspect.classList.add('active')
-      btnRiver.classList.remove('active')
-      btnPrairie.classList.remove('active')
-    } else {
-      btnInspect.classList.remove('active')
-      if (state.activeBiome === BIOME.WATER) {
-        btnRiver.classList.add('active')
-        btnPrairie.classList.remove('active')
-      } else {
-        btnPrairie.classList.add('active')
-        btnRiver.classList.remove('active')
-      }
-    }
+    const m = state.mode
+    btnInspect.classList.toggle('active', m === 'inspect')
+    btnRiver.classList.toggle('active', m === 'paint' && state.activeBiome === BIOME.WATER)
+    btnPrairie.classList.toggle('active', m === 'paint' && state.activeBiome === BIOME.PRAIRIE)
+    btnSpawnPlant.classList.toggle('active', m === 'spawn-plant')
+    btnSpawnHerb.classList.toggle('active', m === 'spawn-herb')
+    btnSpawnCarn.classList.toggle('active', m === 'spawn-carn')
   }
 
-  const setMode = (mode: 'paint' | 'inspect') => {
+  const setMode = (mode: PainterMode) => {
     state.mode = mode
     setCursor()
     updateButtonStates()
@@ -65,15 +77,35 @@ export function setupPainter(
   const isUITarget = (e: MouseEvent) =>
     !!(e.target as HTMLElement).closest(UI_SELECTOR)
 
+  const doSpawn = (x: number, y: number) => {
+    const dx = x - lastSpawnX
+    const dy = y - lastSpawnY
+    if (!painting || Math.sqrt(dx * dx + dy * dy) < SPAWN_DRAG_DIST) return
+    lastSpawnX = x
+    lastSpawnY = y
+    if (state.mode === 'spawn-plant') spawner.spawnPlant(x, y)
+    else if (state.mode === 'spawn-herb') spawner.spawnHerb(x, y)
+    else if (state.mode === 'spawn-carn') spawner.spawnCarn(x, y)
+  }
+
   // ── Souris — sur document pour traverser les overlays ─────────────────────
   document.addEventListener('mousedown', e => {
     if (e.button !== 0) return
-    if (state.mode !== 'paint') return
     if (isUITarget(e)) return
     if (!isInCanvas(e.clientX, e.clientY)) return
-    painting = true
     const { x, y } = getPos(e.clientX, e.clientY)
-    biomeMap.paint(x, y, BRUSH_RADIUS, state.activeBiome)
+
+    if (state.mode === 'paint') {
+      painting = true
+      biomeMap.paint(x, y, BRUSH_RADIUS, state.activeBiome)
+    } else if (isSpawnMode()) {
+      painting = true
+      lastSpawnX = x
+      lastSpawnY = y
+      if (state.mode === 'spawn-plant') spawner.spawnPlant(x, y)
+      else if (state.mode === 'spawn-herb') spawner.spawnHerb(x, y)
+      else if (state.mode === 'spawn-carn') spawner.spawnCarn(x, y)
+    }
   })
 
   document.addEventListener('mousemove', e => {
@@ -81,8 +113,10 @@ export function setupPainter(
     const { x, y } = getPos(e.clientX, e.clientY)
     state.cursorX = x
     state.cursorY = y
-    state.cursorVisible = inCanvas && state.mode === 'paint'
-    if (painting && inCanvas && state.mode === 'paint') biomeMap.paint(x, y, BRUSH_RADIUS, state.activeBiome)
+    state.cursorVisible = inCanvas && (state.mode === 'paint' || isSpawnMode())
+    if (!inCanvas) return
+    if (painting && state.mode === 'paint') biomeMap.paint(x, y, BRUSH_RADIUS, state.activeBiome)
+    else if (painting && isSpawnMode()) doSpawn(x, y)
   })
 
   document.addEventListener('mouseup', () => { painting = false })
@@ -90,22 +124,28 @@ export function setupPainter(
   // ── Touch ─────────────────────────────────────────────────────────────────
   canvas.addEventListener('touchstart', e => {
     e.preventDefault()
-    if (state.mode !== 'paint') return
-    painting = true
     const touch = e.touches[0]
     const { x, y } = getPos(touch.clientX, touch.clientY)
-    biomeMap.paint(x, y, BRUSH_RADIUS, state.activeBiome)
+    painting = true
+    if (state.mode === 'paint') {
+      biomeMap.paint(x, y, BRUSH_RADIUS, state.activeBiome)
+    } else if (isSpawnMode()) {
+      lastSpawnX = x; lastSpawnY = y
+      if (state.mode === 'spawn-plant') spawner.spawnPlant(x, y)
+      else if (state.mode === 'spawn-herb') spawner.spawnHerb(x, y)
+      else if (state.mode === 'spawn-carn') spawner.spawnCarn(x, y)
+    }
   }, { passive: false })
 
   canvas.addEventListener('touchmove', e => {
     e.preventDefault()
-    if (state.mode !== 'paint') return
     if (!painting) return
     const touch = e.touches[0]
     const { x, y } = getPos(touch.clientX, touch.clientY)
     state.cursorX = x
     state.cursorY = y
-    biomeMap.paint(x, y, BRUSH_RADIUS, state.activeBiome)
+    if (state.mode === 'paint') biomeMap.paint(x, y, BRUSH_RADIUS, state.activeBiome)
+    else if (isSpawnMode()) doSpawn(x, y)
   }, { passive: false })
 
   canvas.addEventListener('touchend', () => { painting = false })
@@ -125,14 +165,16 @@ export function setupPainter(
     setMode(state.mode === 'inspect' ? 'paint' : 'inspect')
   })
 
-  // ── Raccourci clavier ─────────────────────────────────────────────────────
+  // ── Boutons de spawn ──────────────────────────────────────────────────────
+  btnSpawnPlant.addEventListener('click', () => setMode(state.mode === 'spawn-plant' ? 'inspect' : 'spawn-plant'))
+  btnSpawnHerb.addEventListener('click',  () => setMode(state.mode === 'spawn-herb'  ? 'inspect' : 'spawn-herb'))
+  btnSpawnCarn.addEventListener('click',  () => setMode(state.mode === 'spawn-carn'  ? 'inspect' : 'spawn-carn'))
+
+  // ── Raccourcis clavier ────────────────────────────────────────────────────
   document.addEventListener('keydown', e => {
     if (e.ctrlKey || e.metaKey) return
-    if (e.key === 'i' || e.key === 'I') {
-      setMode(state.mode === 'inspect' ? 'paint' : 'inspect')
-    }
+    if (e.key === 'i' || e.key === 'I') setMode(state.mode === 'inspect' ? 'paint' : 'inspect')
   })
 
-  // Appliquer l'état initial (boutons + curseur)
   setMode(state.mode)
 }

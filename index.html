@@ -103,7 +103,10 @@
     .biome-btn:hover { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.85); }
     #btn-biome-river.active  { border-color: #7dd3fc; color: #7dd3fc; background: rgba(125,211,252,0.1); }
     #btn-biome-prairie.active { border-color: #86efac; color: #86efac; background: rgba(134,239,172,0.1); }
-    #btn-inspect.active { border-color: #c4b5fd; color: #c4b5fd; background: rgba(196,181,253,0.1); }
+    #btn-inspect.active      { border-color: #c4b5fd; color: #c4b5fd; background: rgba(196,181,253,0.1); }
+    #btn-spawn-plant.active  { border-color: #4ade80; color: #4ade80; background: rgba(74,222,128,0.1); }
+    #btn-spawn-herb.active   { border-color: #60a5fa; color: #60a5fa; background: rgba(96,165,250,0.1); }
+    #btn-spawn-carn.active   { border-color: #fb923c; color: #fb923c; background: rgba(251,146,60,0.1); }
     #main-canvas { cursor: none; }
 
     /* ── Entity tooltip ── */
@@ -551,6 +554,12 @@
         <button id="btn-inspect" class="biome-btn" title="Mode inspection (I)">🔍</button>
         <button id="btn-biome-river"   class="biome-btn active" title="Lac">💧</button>
         <button id="btn-biome-prairie" class="biome-btn" title="Prairie">🌾</button>
+      </div>
+      <div class="row biome-row">
+        <label>Spawn</label>
+        <button id="btn-spawn-plant" class="biome-btn" title="Planter">🌿</button>
+        <button id="btn-spawn-herb"  class="biome-btn" title="Herbivore">🐇</button>
+        <button id="btn-spawn-carn"  class="biome-btn" title="Carnivore">🦊</button>
       </div>
       <div class="row" id="season-display">
         <span id="season-icon">🌸</span>
