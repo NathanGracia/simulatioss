@@ -179,9 +179,11 @@ export class World {
       updateHerbivioreBehavior(herb, neighbors, this.width, this.height, this.biomeMap)
       moveAndBound(herb, this.width, this.height, this.biomeMap)
 
-      // Eat
-      const nearbyPlants = this.plantGrid.getNeighbors(herb.pos, CONFIG.EAT_DISTANCE) as Plant[]
-      if (herbivoreFeed(herb, nearbyPlants.filter(p => p.type === 'plant') as Plant[])) this.herbEatCount++
+      // Eat — seulement si affamé (évite qu'un animal rassasié dévore tout sur son passage)
+      if (herb.energy < herb.hungerThreshold) {
+        const nearbyPlants = this.plantGrid.getNeighbors(herb.pos, CONFIG.EAT_DISTANCE) as Plant[]
+        if (herbivoreFeed(herb, nearbyPlants.filter(p => p.type === 'plant') as Plant[])) this.herbEatCount++
+      }
 
       // Reproduce
       const nearbyHerbs = neighbors.filter(n => n.type === 'herbivore' && !n.dead) as Herbivore[]
@@ -205,10 +207,12 @@ export class World {
       updateCarnivoreBehavior(carn, neighbors, this.width, this.height, this.biomeMap)
       moveAndBound(carn, this.width, this.height, this.biomeMap)
 
-      // Eat
-      const nearbyHerbs = this.animalGrid.getNeighbors(carn.pos, CONFIG.EAT_DISTANCE)
-        .filter(n => n.type === 'herbivore' && !n.dead) as Herbivore[]
-      if (carnivoreFeed(carn, nearbyHerbs)) this.carnEatCount++
+      // Eat — seulement si affamé
+      if (carn.energy < carn.hungerThreshold) {
+        const nearbyHerbs = this.animalGrid.getNeighbors(carn.pos, CONFIG.EAT_DISTANCE)
+          .filter(n => n.type === 'herbivore' && !n.dead) as Herbivore[]
+        if (carnivoreFeed(carn, nearbyHerbs)) this.carnEatCount++
+      }
 
       // Reproduce
       const nearbyCarnivores = neighbors.filter(n => n.type === 'carnivore' && !n.dead) as Carnivore[]
