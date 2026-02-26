@@ -1,5 +1,6 @@
 import { CONFIG } from '../config'
 import { fetchPresets, savePreset, deletePreset } from './presets'
+import { setVolume, getVolume } from './sound'
 
 const DEFAULTS = { ...CONFIG } as typeof CONFIG
 
@@ -331,6 +332,41 @@ export function setupSettingsPanel(onReset: () => void): void {
   note.className = 'sp-note'
   note.textContent = '↺ = prend effet au prochain reset (R)'
   panel.appendChild(note)
+
+  // Volume slider
+  const volRow = document.createElement('div')
+  volRow.className = 'sp-vol-row'
+
+  const volIcon = document.createElement('span')
+  volIcon.className = 'sp-vol-icon'
+  volIcon.textContent = '🔊'
+
+  const volSlider = document.createElement('input')
+  volSlider.type = 'range'
+  volSlider.className = 'sp-slider sp-vol-slider'
+  volSlider.min = '0'
+  volSlider.max = '1'
+  volSlider.step = '0.05'
+  volSlider.value = String(getVolume())
+  volSlider.style.setProperty('--thumb-color', '#94a3b8')
+
+  const savedVol = localStorage.getItem('simulatioss-volume')
+  if (savedVol !== null) {
+    const v = parseFloat(savedVol)
+    volSlider.value = String(v)
+    setVolume(v)
+  }
+
+  volSlider.addEventListener('input', () => {
+    const v = parseFloat(volSlider.value)
+    setVolume(v)
+    volIcon.textContent = v === 0 ? '🔇' : v < 0.4 ? '🔉' : '🔊'
+    localStorage.setItem('simulatioss-volume', String(v))
+  })
+
+  volRow.appendChild(volIcon)
+  volRow.appendChild(volSlider)
+  panel.appendChild(volRow)
 
   const sliderMap = new Map<ConfigKey, { input: HTMLInputElement; display: HTMLSpanElement; step: number }>()
 

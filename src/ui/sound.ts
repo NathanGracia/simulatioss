@@ -1,3 +1,11 @@
+let masterVolume = 0.5
+
+export function setVolume(v: number): void {
+  masterVolume = Math.max(0, Math.min(1, v))
+}
+
+export function getVolume(): number { return masterVolume }
+
 let ctx: AudioContext | null = null
 
 function getCtx(): AudioContext | null {
@@ -91,7 +99,7 @@ export function soundHerbEat(count: number): void {
   herbEatBudget -= n
   for (let i = 0; i < n; i++) {
     const jitter = i * 0.018
-    playNoise(600 + Math.random() * 200, 0.04, 0.055, jitter)
+    playNoise(600 + Math.random() * 200, 0.04 * masterVolume, 0.055, jitter)
   }
 }
 
@@ -101,8 +109,8 @@ export function soundCarnEat(count: number): void {
   carnEatBudget -= n
   for (let i = 0; i < n; i++) {
     const jitter = i * 0.025
-    playNoise(180 + Math.random() * 80, 0.07, 0.08, jitter)
-    playTone(120, 'sine', 0.05, 0.003, 0.1, jitter)
+    playNoise(180 + Math.random() * 80, 0.07 * masterVolume, 0.08, jitter)
+    playTone(120, 'sine', 0.05 * masterVolume, 0.003, 0.1, jitter)
   }
 }
 
@@ -112,6 +120,6 @@ export function soundReproduce(count: number): void {
   reproduceBudget -= n
   for (let i = 0; i < n; i++) {
     const jitter = i * 0.03
-    playTone(1400 + Math.random() * 300, 'sine', 0.025, 0.005, 0.18, jitter)
+    playTone(1400 + Math.random() * 300, 'sine', 0.025 * masterVolume, 0.005, 0.18, jitter)
   }
 }
