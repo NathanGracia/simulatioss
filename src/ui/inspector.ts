@@ -4,12 +4,18 @@ import { PainterState } from './painter'
 import { defaultGenome } from '../genetics/genome'
 import { herbivoreHSL, carnivoreHSL } from './entityColor'
 
+export interface TrackState {
+  entity: Animal | null
+  update(): void
+}
+
 export function setupInspector(
   canvas: HTMLCanvasElement,
   world: World,
   painterState: PainterState,
-): void {
+): TrackState {
   const tooltip = document.getElementById('entity-tooltip')!
+  const track: TrackState = { entity: null, update: () => {} }
 
   const getCanvasPos = (clientX: number, clientY: number) => {
     const rect = canvas.getBoundingClientRect()
@@ -31,7 +37,7 @@ export function setupInspector(
     return nearest
   }
 
-  function buildTooltipHTML(entity: Animal): string {
+  function buildTooltipHTML(entity: Animal, locked: boolean): string {
     const isHerb = entity.type === 'herbivore'
     const typeLabel = isHerb ? 'Herbivore' : 'Carnivore'
 
@@ -90,9 +96,13 @@ export function setupInspector(
         </div>`
     }
 
+    const pinBadge = locked
+      ? `<span class="et-pin">📌</span>`
+      : ''
+
     return `
       <div class="et-header">
-        <span class="et-type" style="color:${typeColor}">${typeLabel}</span>
+        <span class="et-type" style="color:${typeColor}">${typeLabel} ${pinBadge}</span>
         <span class="et-id">#${entity.id}</span>
       </div>
       <div class="et-stat-row">
@@ -112,29 +122,63 @@ export function setupInspector(
     `
   }
 
+  function positionTooltip(x: number, y: number): void {
+    const tw = 220 + 16
+    const th = 300
+    let left = x + 18
+    let top  = y - 10
+    if (left + tw > window.innerWidth)  left = x - tw - 4
+    if (top  + th > window.innerHeight) top  = window.innerHeight - th - 10
+    if (top < 0) top = 10
+    tooltip.style.left = `${left}px`
+    tooltip.style.top  = `${top}px`
+  }
+
+  // ── Hover (uniquement si rien n'est verrouillé) ───────────────────────────
   document.addEventListener('mousemove', e => {
     if (painterState.mode !== 'inspect') return
+    if (track.entity) return  // verrouillé — le hover ne fait rien
     const { x, y } = getCanvasPos(e.clientX, e.clientY)
     const found = findNearest(x, y)
     if (found) {
-      tooltip.innerHTML = buildTooltipHTML(found)
-
-      const tw = 220 + 16
-      const th = 300
-      let left = e.clientX + 14
-      let top = e.clientY - 10
-      if (left + tw > window.innerWidth) left = e.clientX - tw - 4
-      if (top + th > window.innerHeight) top = window.innerHeight - th - 10
-      if (top < 0) top = 10
-      tooltip.style.left = `${left}px`
-      tooltip.style.top = `${top}px`
+      tooltip.innerHTML = buildTooltipHTML(found, false)
+      positionTooltip(e.clientX, e.clientY)
       tooltip.classList.add('visible')
     } else {
       tooltip.classList.remove('visible')
     }
   })
 
-  canvas.addEventListener('mouseleave', () => {
-    tooltip.classList.remove('visible')
+  // ── Clic — verrouille / déverrouille ──────────────────────────────────────
+  document.addEventListener('click', e => {
+    if (painterState.mode !== 'inspect') return
+    if ((e.target as HTMLElement).closest('#ui-overlay, #settings-panel, #settings-toggle')) return
+    const { x, y } = getCanvasPos(e.clientX, e.clientY)
+    const found = findNearest(x, y)
+    if (found) {
+      track.entity = found
+    } else {
+      track.entity = null
+      tooltip.classList.remove('visible')
+    }
   })
+
+  canvas.addEventListener('mouseleave', () => {
+    if (!track.entity) tooltip.classList.remove('visible')
+  })
+
+  // ── update() — appelé chaque frame depuis main.ts ─────────────────────────
+  track.update = () => {
+    if (!track.entity) return
+    if (track.entity.dead) {
+      track.entity = null
+      tooltip.classList.remove('visible')
+      return
+    }
+    tooltip.innerHTML = buildTooltipHTML(track.entity, true)
+    positionTooltip(track.entity.pos.x, track.entity.pos.y)
+    tooltip.classList.add('visible')
+  }
+
+  return track
 }

@@ -4,7 +4,7 @@ import { StatsGraph } from './ui/stats'
 import { setupControls, updateCounters, updateSeason, SimControls } from './ui/controls'
 import { setupSettingsPanel, loadSavedConfig } from './ui/settings'
 import { setupPainter, PainterState } from './ui/painter'
-import { setupInspector } from './ui/inspector'
+import { setupInspector, TrackState } from './ui/inspector'
 import { soundHerbEat, soundCarnEat, soundReproduce, resetSoundBudgets } from './ui/sound'
 import { BIOME } from './biomeMap'
 import { CONFIG } from './config'
@@ -51,7 +51,7 @@ const painterState: PainterState = {
   mode: 'inspect',
 }
 setupPainter(canvas, world.biomeMap, painterState)
-setupInspector(canvas, world, painterState)
+const track: TrackState = setupInspector(canvas, world, painterState)
 
 let lastTime = 0
 const TICK_MS = 1000 / CONFIG.TARGET_FPS
@@ -66,7 +66,8 @@ function loop(timestamp: number): void {
   }
 
   if (controls.paused) {
-    renderer.render(world, painterState)
+    track.update()
+    renderer.render(world, painterState, track)
     stats.render()
     return
   }
@@ -88,7 +89,8 @@ function loop(timestamp: number): void {
   if (carnEats > 0) soundCarnEat(carnEats)
   if (matings  > 0) soundReproduce(matings)
 
-  renderer.render(world, painterState)
+  track.update()
+  renderer.render(world, painterState, track)
 
   if (world.tick % STATS_INTERVAL === 0) {
     const pop = world.getPopulation()

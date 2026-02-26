@@ -3,6 +3,7 @@ import { CONFIG } from '../config'
 import { BIOME } from '../biomeMap'
 import { SEASON_COLORS } from '../systems/season'
 import { PainterState, BRUSH_RADIUS } from './painter'
+import { TrackState } from './inspector'
 import { herbivoreHSL, carnivoreHSL } from './entityColor'
 
 const TAU = Math.PI * 2
@@ -226,7 +227,7 @@ export class Renderer {
 
   // ── Rendu principal ──────────────────────────────────────────────────────────
 
-  render(world: World, painter: PainterState): void {
+  render(world: World, painter: PainterState, track?: TrackState): void {
     const { ctx } = this
     const W = world.width
     const H = world.height
@@ -255,6 +256,25 @@ export class Renderer {
     ctx.drawImage(waterTex, -5, -5, W + 10, H + 10)
     ctx.filter = 'none'
     ctx.restore()
+
+    // Anneau de sélection (entité suivie)
+    if (track?.entity && !track.entity.dead) {
+      const e = track.entity
+      const r = e.type === 'herbivore' ? 16 : 20
+      const pulse = 0.55 + 0.45 * Math.sin(world.tick * 0.14)
+      ctx.save()
+      ctx.setLineDash([5, 3])
+      ctx.lineWidth = 1.5
+      ctx.strokeStyle = '#fff'
+      ctx.shadowColor = '#fff'
+      ctx.shadowBlur = 8
+      ctx.globalAlpha = 0.45 + 0.3 * pulse
+      ctx.beginPath()
+      ctx.arc(e.pos.x, e.pos.y, r + pulse * 3, 0, TAU)
+      ctx.stroke()
+      ctx.setLineDash([])
+      ctx.restore()
+    }
 
     // Ondes de séduction (sous les entités)
     this.renderRipples(ctx, world)
