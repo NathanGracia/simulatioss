@@ -1,7 +1,7 @@
 import { World } from './world'
 import { Renderer } from './ui/renderer'
 import { StatsGraph } from './ui/stats'
-import { setupControls, updateCounters, SimControls } from './ui/controls'
+import { setupControls, updateCounters, updateSeason, SimControls } from './ui/controls'
 import { setupSettingsPanel, loadSavedConfig } from './ui/settings'
 import { setupPainter, PainterState } from './ui/painter'
 import { setupInspector } from './ui/inspector'
@@ -95,6 +95,7 @@ function loop(timestamp: number): void {
     stats.record(pop)
     stats.render()
     updateCounters(pop.plants, pop.herbivores, pop.carnivores)
+    updateSeason(world.season.season, world.season.progress)
   }
 }
 

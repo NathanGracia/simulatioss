@@ -432,6 +432,35 @@
       padding: 6px 0;
     }
     .sp-preset-error { color: rgba(255,120,120,0.5); }
+
+    /* ── Season indicator ── */
+    #season-display { gap: 7px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.06); }
+    #season-icon { font-size: 13px; }
+    #season-name { font-size: 10px; color: rgba(255,255,255,0.45); letter-spacing: 0.03em; min-width: 60px; }
+    .season-bar-wrap { flex: 1; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+    #season-bar { height: 100%; width: 0%; background: rgba(255,255,255,0.5); border-radius: 2px; }
+    .season-info {
+      position: relative; font-size: 10px; color: rgba(255,255,255,0.2);
+      cursor: default; user-select: none; flex-shrink: 0;
+      transition: color 0.12s;
+    }
+    .season-info:hover { color: rgba(255,255,255,0.55); }
+    .season-tooltip {
+      display: none;
+      position: absolute; bottom: calc(100% + 8px); right: 0;
+      width: 210px;
+      background: rgba(8,12,24,0.97);
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 11px; line-height: 1.6;
+      color: rgba(255,255,255,0.72);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+      pointer-events: none;
+      white-space: normal;
+      z-index: 50;
+    }
+    .season-info:hover .season-tooltip { display: block; }
   </style>
 </head>
 <body>
@@ -455,6 +484,12 @@
         <button id="btn-inspect" class="biome-btn" title="Mode inspection (I)">🔍</button>
         <button id="btn-biome-river"   class="biome-btn active" title="Lac">💧</button>
         <button id="btn-biome-prairie" class="biome-btn" title="Prairie">🌾</button>
+      </div>
+      <div class="row" id="season-display">
+        <span id="season-icon">🌸</span>
+        <span id="season-name">Printemps</span>
+        <div class="season-bar-wrap"><div id="season-bar"></div></div>
+        <span class="season-info" aria-label="info">ⓘ<span class="season-tooltip">Les saisons modifient la simulation en continu :<br>🌸 Printemps — croissance ×1.5, drain ×0.9<br>☀️ Été — croissance ×1.2, drain ×1.0<br>🍂 Automne — croissance ×0.55, drain ×1.15<br>❄️ Hiver — croissance ×0.12, drain ×1.5</span></span>
       </div>
       <div id="population-counts">
         <div>🌿 <span class="count-plant" id="cnt-plant">0</span></div>

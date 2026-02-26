@@ -204,6 +204,17 @@ const SECTIONS: Section[] = [
     ],
   },
   {
+    id: 'seasons',
+    title: '🌍 Saisons',
+    color: '#fbbf24',
+    params: [
+      {
+        key: 'SEASON_DURATION', label: 'Durée par saison', min: 200, max: 5000, step: 100,
+        tooltip: 'Nombre de ticks que dure chaque saison. Cycle complet = 4× cette valeur : Printemps → Été → Automne → Hiver. 0 = cycle très rapide.',
+      },
+    ],
+  },
+  {
     id: 'flocking',
     title: '🐑 Comportement de groupe',
     color: '#67e8f9',

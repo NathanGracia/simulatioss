@@ -78,6 +78,9 @@ export const CONFIG = {
   MUTATION_RATE: 0.5,       // probabilité de mutation par gène
   MUTATION_STRENGTH: 0.35,  // amplitude max ±35% de la valeur courante
 
+  // Saisons
+  SEASON_DURATION: 1200, // ticks par saison (×4 = cycle complet)
+
   // Comportement de groupe (boids — herbivores uniquement)
   FLOCK_SEPARATION_RADIUS: 30,   // px — distance en dessous de laquelle la séparation s'active
   FLOCK_SEPARATION_WEIGHT: 1.5,  // force de répulsion entre voisins proches

@@ -10,6 +10,7 @@ import { updateHerbivioreBehavior, updateCarnivoreBehavior, moveAndBound } from 
 import { drainEnergy } from './systems/energy'
 import { herbivoreFeed, carnivoreFeed } from './systems/feeding'
 import { tryReproduceHerbivore, tryReproduceCarnivore } from './systems/reproduction'
+import { SeasonSystem } from './systems/season'
 
 export interface PopulationSnapshot {
   plants: number
@@ -33,6 +34,7 @@ export class World {
   matingEvents: MatingEvent[] = []
   herbEatCount: number = 0
   carnEatCount: number = 0
+  readonly season = new SeasonSystem()
   biomeMap: BiomeMap
 
   private plantGrid = new SpatialGrid(CONFIG.CELL_SIZE)
@@ -93,6 +95,8 @@ export class World {
     this.matingEvents.length = 0
     this.herbEatCount = 0
     this.carnEatCount = 0
+    this.season.update(this.tick)
+    const mods = this.season.getModifiers()
 
     // Rebuild plant grid en premier (positions stables depuis le tick précédent)
     this.plantGrid.rebuild(this.plants)
@@ -101,12 +105,14 @@ export class World {
     const newPlants: Plant[] = []
     for (const plant of this.plants) {
       plant.grow()
+      // Bonus/malus saisonnier sur la croissance de base
+      plant.energy = Math.min(plant.energyMax, plant.energy + CONFIG.PLANT_GROWTH_RATE * (mods.growthMult - 1))
 
       // Proximité rivière : nourrit, trop loin dessèche
       const nearWater = this.biomeMap.isNearWater(plant.pos.x, plant.pos.y, CONFIG.PLANT_WATER_PROXIMITY)
       if (nearWater) {
-        // Bonus de croissance proche de l'eau
-        plant.energy = Math.min(plant.energyMax, plant.energy + CONFIG.PLANT_GROWTH_RATE * 1.2)
+        // Bonus de croissance proche de l'eau (modulé par saison)
+        plant.energy = Math.min(plant.energyMax, plant.energy + CONFIG.PLANT_GROWTH_RATE * 1.2 * mods.growthMult)
       } else {
         // Trop loin de l'eau : la plante sèche et meurt
         plant.energy -= 1.5
@@ -122,7 +128,7 @@ export class World {
       }
 
       if (this.plants.length + newPlants.length < CONFIG.PLANT_MAX_COUNT) {
-        const spreadPos = plant.trySpread()
+        const spreadPos = plant.trySpread(mods.spreadMult)
         if (spreadPos) {
           const m = CONFIG.WALL_MARGIN
           const clampedPos = new Vec2(
@@ -142,7 +148,7 @@ export class World {
     this.plants.push(...newPlants)
 
     // Dispersion par le vent : graine aléatoire près de l'eau, indépendante de la reproduction
-    if (this.plants.length < CONFIG.PLANT_MAX_COUNT && Math.random() < CONFIG.PLANT_WIND_SPAWN_CHANCE) {
+    if (this.plants.length < CONFIG.PLANT_MAX_COUNT && Math.random() < CONFIG.PLANT_WIND_SPAWN_CHANCE * mods.spreadMult) {
       for (let i = 0; i < 20; i++) {
         const pos = this.randomPos()
         if (
@@ -165,7 +171,7 @@ export class World {
     for (const herb of this.herbivores) {
       if (herb.dead) continue
 
-      drainEnergy(herb)
+      drainEnergy(herb, mods.herbDrainMult)
       if (herb.dead) continue
 
       // Get neighbors
@@ -192,7 +198,7 @@ export class World {
     for (const carn of this.carnivores) {
       if (carn.dead) continue
 
-      drainEnergy(carn)
+      drainEnergy(carn, mods.carnDrainMult)
       if (carn.dead) continue
 
       const neighbors = this.animalGrid.getNeighbors(carn.pos, carn.visionRadius)

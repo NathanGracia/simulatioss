@@ -1,6 +1,7 @@
 import { World } from '../world'
 import { CONFIG } from '../config'
 import { BIOME } from '../biomeMap'
+import { SEASON_COLORS } from '../systems/season'
 import { PainterState, BRUSH_RADIUS } from './painter'
 import { herbivoreHSL, carnivoreHSL } from './entityColor'
 
@@ -238,6 +239,12 @@ export class Renderer {
 
     // Layer biome (grass + sable + eau) — rendu offscreen, 1 seul drawImage par frame
     ctx.drawImage(this.getBiomeLayer(world, W, H), 0, 0)
+
+    // Tint saisonnier — overlay très subtil sur toute la carte
+    ctx.globalAlpha = 0.07
+    ctx.fillStyle = SEASON_COLORS[world.season.season]
+    ctx.fillRect(0, 0, W, H)
+    ctx.globalAlpha = 1
 
     // Shimmer animé — seul blur restant dans le hot path
     const shimmer = 0.18 + 0.05 * Math.sin(world.tick * 0.04)

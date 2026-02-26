@@ -42,6 +42,18 @@ export function setupControls(controls: SimControls): void {
   })
 }
 
+export function updateSeason(season: number, progress: number): void {
+  const icons  = ['🌸', '☀️', '🍂', '❄️']
+  const names  = ['Printemps', 'Été', 'Automne', 'Hiver']
+  const colors = ['#bbf7d0', '#fef08a', '#fed7aa', '#bae6fd']
+  const icon = document.getElementById('season-icon')
+  const name = document.getElementById('season-name')
+  const bar  = document.getElementById('season-bar') as HTMLElement | null
+  if (icon) icon.textContent = icons[season]
+  if (name) name.textContent = names[season]
+  if (bar)  { bar.style.width = `${progress * 100}%`; bar.style.background = colors[season] }
+}
+
 export function updateCounters(plants: number, herbivores: number, carnivores: number): void {
   const p = document.getElementById('cnt-plant')
   const h = document.getElementById('cnt-herb')
