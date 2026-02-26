@@ -6,6 +6,7 @@ import { setupSettingsPanel, loadSavedConfig } from './ui/settings'
 import { setupPainter, PainterState } from './ui/painter'
 import { setupInspector, TrackState } from './ui/inspector'
 import { GeneticHistory, setupGeneticModal } from './ui/geneticGraph'
+import { HeatmapSystem } from './ui/heatmap'
 import { soundHerbEat, soundCarnEat, soundReproduce, resetSoundBudgets } from './ui/sound'
 import { BIOME } from './biomeMap'
 import { CONFIG } from './config'
@@ -20,6 +21,8 @@ loadSavedConfig(Object.keys(CONFIG) as (keyof typeof CONFIG)[])
 
 const world = new World(window.innerWidth, window.innerHeight)
 
+const heatmap = new HeatmapSystem()
+
 function resizeCanvas(): void {
   const W = window.innerWidth
   const H = window.innerHeight
@@ -30,6 +33,7 @@ function resizeCanvas(): void {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
   world.width = W
   world.height = H
+  heatmap.resize(W, H)
 }
 resizeCanvas()
 window.addEventListener('resize', resizeCanvas)
@@ -58,6 +62,16 @@ const geneHistory = new GeneticHistory()
 const geneModal   = setupGeneticModal(geneHistory)
 document.getElementById('btn-genetics')!.addEventListener('click', () => geneModal.toggle())
 
+const btnHeatmap = document.getElementById('btn-heatmap')!
+function toggleHeatmap(): void {
+  heatmap.enabled = !heatmap.enabled
+  btnHeatmap.classList.toggle('active', heatmap.enabled)
+}
+btnHeatmap.addEventListener('click', toggleHeatmap)
+document.addEventListener('keydown', e => {
+  if (!e.ctrlKey && !e.metaKey && (e.key === 'h' || e.key === 'H')) toggleHeatmap()
+})
+
 let lastTime = 0
 const TICK_MS = 1000 / CONFIG.TARGET_FPS
 const STATS_INTERVAL = 5
@@ -72,7 +86,7 @@ function loop(timestamp: number): void {
 
   if (controls.paused) {
     track.update()
-    renderer.render(world, painterState, track)
+    renderer.render(world, painterState, track, heatmap)
     stats.render()
     return
   }
@@ -87,7 +101,11 @@ function loop(timestamp: number): void {
     herbEats += world.herbEatCount
     carnEats += world.carnEatCount
     matings  += world.matingEvents.length
+    for (const e of world.herbFeedEvents) heatmap.add(e.x, e.y, 'herb')
+    for (const e of world.carnFeedEvents) heatmap.add(e.x, e.y, 'carn')
+    for (const e of world.matingEvents)   heatmap.add(e.x, e.y, 'repro')
   }
+  heatmap.decay()
 
   resetSoundBudgets()
   if (herbEats > 0) soundHerbEat(herbEats)
@@ -95,7 +113,7 @@ function loop(timestamp: number): void {
   if (matings  > 0) soundReproduce(matings)
 
   track.update()
-  renderer.render(world, painterState, track)
+  renderer.render(world, painterState, track, heatmap)
 
   if (world.tick % STATS_INTERVAL === 0) {
     const pop = world.getPopulation()

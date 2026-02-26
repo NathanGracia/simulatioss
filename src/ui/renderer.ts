@@ -4,6 +4,7 @@ import { BIOME } from '../biomeMap'
 import { SEASON_COLORS } from '../systems/season'
 import { PainterState, BRUSH_RADIUS } from './painter'
 import { TrackState } from './inspector'
+import { HeatmapSystem } from './heatmap'
 import { herbivoreHSL, carnivoreHSL } from './entityColor'
 
 const TAU = Math.PI * 2
@@ -227,7 +228,7 @@ export class Renderer {
 
   // ── Rendu principal ──────────────────────────────────────────────────────────
 
-  render(world: World, painter: PainterState, track?: TrackState): void {
+  render(world: World, painter: PainterState, track?: TrackState, heatmap?: HeatmapSystem): void {
     const { ctx } = this
     const W = world.width
     const H = world.height
@@ -413,6 +414,9 @@ export class Renderer {
 
     // Particules par-dessus tout
     this.renderParticles(ctx)
+
+    // Heatmap d'activité (screen blend — glow de chaleur)
+    heatmap?.render(ctx, W, H)
 
     // Curseur de pinceau
     if (painter.cursorVisible) {

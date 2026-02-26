@@ -516,15 +516,16 @@
       border-radius: 8px;
       overflow: hidden;
     }
-    #btn-genetics {
+    #btn-genetics, #btn-heatmap {
       background: rgba(255,255,255,0.07);
       border: 1px solid rgba(255,255,255,0.14);
       color: rgba(255,255,255,0.75);
       padding: 5px 10px;
       border-radius: 5px; cursor: pointer; font-size: 13px;
-      transition: background 0.12s, border-color 0.12s;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
     }
-    #btn-genetics:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.25); }
+    #btn-genetics:hover, #btn-heatmap:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.25); }
+    #btn-heatmap.active { border-color: #fbbf24; color: #fbbf24; background: rgba(251,191,36,0.12); }
   </style>
 </head>
 <body>
@@ -538,6 +539,7 @@
         <button id="btn-pause">⏸ Pause</button>
         <button id="btn-reset">↺ Reset</button>
         <button id="btn-genetics" title="Graphes génétiques (G)">📈</button>
+        <button id="btn-heatmap"  title="Heatmap d'activité (H)">🌡</button>
       </div>
       <div class="row">
         <label>Vitesse</label>

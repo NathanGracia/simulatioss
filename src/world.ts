@@ -34,6 +34,8 @@ export class World {
   matingEvents: MatingEvent[] = []
   herbEatCount: number = 0
   carnEatCount: number = 0
+  herbFeedEvents: { x: number; y: number }[] = []
+  carnFeedEvents: { x: number; y: number }[] = []
   readonly season = new SeasonSystem()
   biomeMap: BiomeMap
 
@@ -95,6 +97,8 @@ export class World {
     this.matingEvents.length = 0
     this.herbEatCount = 0
     this.carnEatCount = 0
+    this.herbFeedEvents.length = 0
+    this.carnFeedEvents.length = 0
     this.season.update(this.tick)
     const mods = this.season.getModifiers()
 
@@ -182,7 +186,10 @@ export class World {
       // Eat — seulement si affamé (évite qu'un animal rassasié dévore tout sur son passage)
       if (herb.energy < herb.hungerThreshold) {
         const nearbyPlants = this.plantGrid.getNeighbors(herb.pos, CONFIG.EAT_DISTANCE) as Plant[]
-        if (herbivoreFeed(herb, nearbyPlants.filter(p => p.type === 'plant') as Plant[])) this.herbEatCount++
+        if (herbivoreFeed(herb, nearbyPlants.filter(p => p.type === 'plant') as Plant[])) {
+          this.herbEatCount++
+          this.herbFeedEvents.push({ x: herb.pos.x, y: herb.pos.y })
+        }
       }
 
       // Reproduce
@@ -211,7 +218,10 @@ export class World {
       if (carn.energy < carn.hungerThreshold) {
         const nearbyHerbs = this.animalGrid.getNeighbors(carn.pos, CONFIG.EAT_DISTANCE)
           .filter(n => n.type === 'herbivore' && !n.dead) as Herbivore[]
-        if (carnivoreFeed(carn, nearbyHerbs)) this.carnEatCount++
+        if (carnivoreFeed(carn, nearbyHerbs)) {
+          this.carnEatCount++
+          this.carnFeedEvents.push({ x: carn.pos.x, y: carn.pos.y })
+        }
       }
 
       // Reproduce
