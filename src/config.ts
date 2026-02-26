@@ -77,4 +77,10 @@ export const CONFIG = {
   // Génétique
   MUTATION_RATE: 0.5,       // probabilité de mutation par gène
   MUTATION_STRENGTH: 0.35,  // amplitude max ±35% de la valeur courante
+
+  // Comportement de groupe (boids — herbivores uniquement)
+  FLOCK_SEPARATION_RADIUS: 30,   // px — distance en dessous de laquelle la séparation s'active
+  FLOCK_SEPARATION_WEIGHT: 1.5,  // force de répulsion entre voisins proches
+  FLOCK_ALIGNMENT_WEIGHT: 0.4,   // tendance à s'aligner sur la vélocité du groupe
+  FLOCK_COHESION_WEIGHT: 0.25,   // tendance à se rapprocher du centroïde du groupe
 }

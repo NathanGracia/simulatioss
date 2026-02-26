@@ -202,6 +202,29 @@ const SECTIONS: Section[] = [
       },
     ],
   },
+  {
+    id: 'flocking',
+    title: '🐑 Comportement de groupe',
+    color: '#67e8f9',
+    params: [
+      {
+        key: 'FLOCK_SEPARATION_RADIUS', label: 'Rayon séparation', min: 5, max: 80, step: 5,
+        tooltip: 'Distance en dessous de laquelle un herbivore s\'écarte de ses voisins. Évite que le troupeau se compresse en un seul point.',
+      },
+      {
+        key: 'FLOCK_SEPARATION_WEIGHT', label: 'Force séparation', min: 0, max: 4, step: 0.1,
+        tooltip: 'Intensité de la répulsion entre voisins trop proches. Élevé = espacement strict, les individus gardent leurs distances.',
+      },
+      {
+        key: 'FLOCK_ALIGNMENT_WEIGHT', label: 'Force alignement', min: 0, max: 1.5, step: 0.05,
+        tooltip: 'Tendance à s\'aligner sur la direction moyenne du groupe. Élevé = le troupeau se synchronise et se déplace en banc.',
+      },
+      {
+        key: 'FLOCK_COHESION_WEIGHT', label: 'Force cohésion', min: 0, max: 1, step: 0.05,
+        tooltip: 'Tendance à se rapprocher du centre du groupe. Élevé = les herbivores restent groupés même quand ils errent.',
+      },
+    ],
+  },
 ]
 
 function fmt(v: number, step: number): string {

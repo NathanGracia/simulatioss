@@ -1,9 +1,10 @@
 import { Vec2 } from '../math/vec2'
 import { Herbivore } from '../entities/herbivore'
+
 import { Carnivore } from '../entities/carnivore'
 import { Plant } from '../entities/plant'
 import { Entity } from '../entities/entity'
-import { seek, flee, wander, applyVelocity, wallAvoid } from './steering'
+import { seek, flee, wander, flockForce, applyVelocity, wallAvoid } from './steering'
 import { getSeekTarget } from './pathfinder'
 import { BiomeMap, BIOME } from '../biomeMap'
 
@@ -100,8 +101,17 @@ export function updateHerbivioreBehavior(
     }
   }
 
-  // 4. Wander
-  applyVelocity(herb, wander(herb))
+  // 4. Flock + wander
+  const herdmates = neighbors.filter(n => n.type === 'herbivore' && !n.dead) as Herbivore[]
+  const wanderVec = wander(herb)
+  if (herdmates.length > 0) {
+    const flock = flockForce(herb, herdmates)
+    const combined = new Vec2(wanderVec.x + flock.x, wanderVec.y + flock.y)
+      .normalize().scale(herb.maxSpeed)
+    applyVelocity(herb, combined)
+  } else {
+    applyVelocity(herb, wanderVec)
+  }
 }
 
 /**
