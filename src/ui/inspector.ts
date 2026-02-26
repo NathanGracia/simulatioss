@@ -49,19 +49,20 @@ export function setupInspector(
     const def = defaultGenome(entity.type as 'herbivore' | 'carnivore')
     const g = entity.genome
 
-    const calcDelta = (val: number, defVal: number): { text: string; color: string } => {
+    const calcDelta = (val: number, defVal: number, lowerIsBetter = false): { text: string; color: string } => {
       if (defVal === 0) return { text: '—', color: 'rgba(255,255,255,0.3)' }
       const pct = Math.round((val - defVal) / defVal * 100)
       if (Math.abs(pct) < 1) return { text: '—', color: 'rgba(255,255,255,0.3)' }
       const positive = pct > 0
+      const good = lowerIsBetter ? !positive : positive
       return {
         text: `${positive ? '▲' : '▼'}${positive ? '+' : ''}${pct}%`,
-        color: positive ? '#4ade80' : '#f87171',
+        color: good ? '#4ade80' : '#f87171',
       }
     }
 
-    const geneRow = (label: string, val: number, defVal: number, decimals: number): string => {
-      const d = calcDelta(val, defVal)
+    const geneRow = (label: string, val: number, defVal: number, decimals: number, lowerIsBetter = false): string => {
+      const d = calcDelta(val, defVal, lowerIsBetter)
       return `<div class="et-gene">
         <span class="et-gene-label">${label}</span>
         <span class="et-gene-val">${val.toFixed(decimals)}</span>
@@ -72,7 +73,7 @@ export function setupInspector(
     let genesHtml = ''
     genesHtml += geneRow('Vitesse', g.speed, def.speed, 2)
     genesHtml += geneRow('Vision', g.visionRadius, def.visionRadius, 0)
-    genesHtml += geneRow('Drain', g.energyDrain, def.energyDrain, 2)
+    genesHtml += geneRow('Drain', g.energyDrain, def.energyDrain, 2, true)
     if (isHerb) genesHtml += geneRow('Peur', g.fearRadius, def.fearRadius, 0)
     genesHtml += geneRow('Cooldown', g.reprCooldown, def.reprCooldown, 0)
     genesHtml += geneRow('Coût repr.', g.reprCostEnergy, def.reprCostEnergy, 1)

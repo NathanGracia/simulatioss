@@ -283,7 +283,7 @@ export class Renderer {
       const [hue] = herbivoreHSL(herb.genome, t)
       const x = herb.pos.x
       const y = herb.pos.y
-      const r = Math.max(3.5, Math.min(9, CONFIG.HERBIVORE_RADIUS + (herb.genome.speed - CONFIG.HERBIVORE_SPEED) * 0.8))
+      const r = Math.max(3.5, Math.min(9, CONFIG.HERBIVORE_RADIUS + (herb.genome.visionRadius - CONFIG.HERBIVORE_VISION) * 0.012))
       const pulse = 0.5 + 0.5 * Math.sin(world.tick * 0.13 + herb.id * 0.5)
       ctx.shadowColor = `hsl(${hue}, 80%, 65%)`
       ctx.globalAlpha = herb.mutationGlow * 0.8
@@ -316,7 +316,7 @@ export class Renderer {
       const [hue, sat, l] = herbivoreHSL(herb.genome, t)
       const x = herb.pos.x
       const y = herb.pos.y
-      const r = Math.max(3.5, Math.min(9, CONFIG.HERBIVORE_RADIUS + (herb.genome.speed - CONFIG.HERBIVORE_SPEED) * 0.8))
+      const r = Math.max(3.5, Math.min(9, CONFIG.HERBIVORE_RADIUS + (herb.genome.visionRadius - CONFIG.HERBIVORE_VISION) * 0.012))
 
       ctx.shadowColor = `hsl(${hue}, 85%, 65%)`
       ctx.shadowBlur = 12

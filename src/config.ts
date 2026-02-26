@@ -19,6 +19,7 @@ export const CONFIG = {
   PLANT_SPREAD_RADIUS_MIN: 10,
   PLANT_SPREAD_RADIUS: 40,
   PLANT_SPREAD_CHANCE: 0.003, // per tick when full
+  PLANT_WIND_SPAWN_CHANCE: 0.06, // probability per tick of a random wind-dispersed seed near water
   PLANT_MAX_COUNT: 400,
   PLANT_WATER_PROXIMITY: 55, // px — distance max à la rivière pour qu'une plante survive
   PLANT_CROWD_RADIUS: 20,     // px — rayon de détection de la surpopulation

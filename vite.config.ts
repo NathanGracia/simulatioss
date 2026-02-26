@@ -7,4 +7,9 @@ export default defineConfig({
     assetsDir: 'assets',
     sourcemap: false,
   },
+  server: {
+    proxy: {
+      '/api': 'http://localhost:3001',
+    },
+  },
 })

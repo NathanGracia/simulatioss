@@ -1,4 +1,5 @@
 import { CONFIG } from '../config'
+import { fetchPresets, savePreset, deletePreset } from './presets'
 
 const DEFAULTS = { ...CONFIG } as typeof CONFIG
 
@@ -87,6 +88,10 @@ const SECTIONS: Section[] = [
         tooltip: 'Énergie perdue par tick quand la plante est étouffée. Si supérieur au taux de croissance, la plante mourra inévitablement.',
       },
       {
+        key: 'PLANT_WIND_SPAWN_CHANCE', label: 'Spawn aléatoire', min: 0, max: 0.3, step: 0.005,
+        tooltip: 'Probabilité par tick qu\'une graine soit dispersée aléatoirement près de l\'eau (vent). 0 = désactivé.',
+      },
+      {
         key: 'INITIAL_PLANTS', label: 'Population init.', min: 10, max: 300, step: 5, needsReset: true,
         tooltip: 'Nombre de plantes placées au démarrage. N\'affecte que la prochaine réinitialisation.',
       },
@@ -119,15 +124,15 @@ const SECTIONS: Section[] = [
       },
       {
         key: 'HERBIVORE_REPR_THRESHOLD', label: 'Seuil reprod.', min: 20, max: 115, step: 5,
-        tooltip: 'Énergie minimale pour se reproduire. Un seuil élevé = reproductions rares mais descendants robustes.',
+        tooltip: 'Énergie minimale pour se reproduire. Bas = avantage : les herbivores se reproduisent même à faible énergie. Élevé = reproductions rares mais descendants plus robustes.',
       },
       {
         key: 'HERBIVORE_REPR_COST', label: 'Coût reprod.', min: 5, max: 70, step: 5,
-        tooltip: 'Énergie dépensée lors d\'une reproduction. Si supérieur au seuil, les herbivores ne peuvent se reproduire qu\'une fois avant de devoir remanger.',
+        tooltip: 'Énergie dépensée lors d\'une reproduction. Bas = avantage : les herbivores peuvent enchaîner les portées sans se vider. Si supérieur au seuil, une seule reproduction avant de devoir remanger.',
       },
       {
         key: 'HERBIVORE_REPR_COOLDOWN', label: 'Cooldown reprod.', min: 30, max: 1200, step: 25,
-        tooltip: 'Nombre de ticks entre deux reproductions d\'un même individu. Réduit les explosions démographiques.',
+        tooltip: 'Ticks d\'attente entre deux reproductions. Bas = avantage : les herbivores se multiplient plus vite. Élevé = croissance lente, limite les explosions démographiques.',
       },
       {
         key: 'HERBIVORE_MAX_COUNT', label: 'Population max', min: 20, max: 500, step: 10,
@@ -162,15 +167,15 @@ const SECTIONS: Section[] = [
       },
       {
         key: 'CARNIVORE_REPR_THRESHOLD', label: 'Seuil reprod.', min: 20, max: 140, step: 5,
-        tooltip: 'Énergie minimale pour se reproduire. Les carnivores ne se reproduisent qu\'après une chasse réussie.',
+        tooltip: 'Énergie minimale pour se reproduire. Bas = avantage : les carnivores se reproduisent même après une chasse modeste. Élevé = seuls les individus très nourris se reproduisent.',
       },
       {
         key: 'CARNIVORE_REPR_COST', label: 'Coût reprod.', min: 5, max: 90, step: 5,
-        tooltip: 'Énergie dépensée lors d\'une reproduction. Un coût élevé limite les surpopulations de prédateurs.',
+        tooltip: 'Énergie dépensée lors d\'une reproduction. Bas = avantage : les prédateurs peuvent se reproduire sans compromettre leur survie. Élevé = limite les surpopulations de prédateurs.',
       },
       {
         key: 'CARNIVORE_REPR_COOLDOWN', label: 'Cooldown reprod.', min: 50, max: 2000, step: 50,
-        tooltip: 'Nombre de ticks entre deux reproductions. Un cooldown long évite qu\'une bonne période de chasse ne déclenche une surpopulation.',
+        tooltip: 'Ticks d\'attente entre deux reproductions. Bas = avantage : les carnivores prolifèrent rapidement après une bonne chasse. Élevé = évite qu\'une période faste ne déclenche une surpopulation.',
       },
       {
         key: 'CARNIVORE_MAX_COUNT', label: 'Population max', min: 3, max: 150, step: 5,
@@ -414,4 +419,122 @@ export function setupSettingsPanel(onReset: () => void): void {
     localStorage.removeItem(STORAGE_KEY)
     onReset()
   })
+
+  // ── Presets section ───────────────────────────────────────────────────────
+
+  const presetSec = document.createElement('div')
+  presetSec.className = 'sp-section'
+
+  const presetTitle = document.createElement('div')
+  presetTitle.className = 'sp-section-title'
+  presetTitle.style.color = '#f9a8d4'
+  presetTitle.textContent = '💾 Presets'
+  presetSec.appendChild(presetTitle)
+
+  // Save row
+  const saveRow = document.createElement('div')
+  saveRow.className = 'sp-preset-save-row'
+
+  const nameInput = document.createElement('input')
+  nameInput.type = 'text'
+  nameInput.className = 'sp-preset-name'
+  nameInput.placeholder = 'Nom du preset'
+
+  const saveBtn = document.createElement('button')
+  saveBtn.className = 'sp-preset-btn'
+  saveBtn.textContent = 'Sauvegarder'
+
+  saveRow.appendChild(nameInput)
+  saveRow.appendChild(saveBtn)
+  presetSec.appendChild(saveRow)
+
+  // List container
+  const listContainer = document.createElement('div')
+  listContainer.className = 'sp-preset-list'
+  presetSec.appendChild(listContainer)
+
+  panel.appendChild(presetSec)
+
+  async function renderPresetList(): Promise<void> {
+    listContainer.innerHTML = ''
+    let presets: Record<string, Record<string, number>>
+    try {
+      presets = await fetchPresets() as Record<string, Record<string, number>>
+    } catch {
+      const errEl = document.createElement('div')
+      errEl.className = 'sp-preset-error'
+      errEl.textContent = 'Serveur non disponible'
+      listContainer.appendChild(errEl)
+      return
+    }
+    const names = Object.keys(presets)
+    if (names.length === 0) {
+      const empty = document.createElement('div')
+      empty.className = 'sp-preset-empty'
+      empty.textContent = 'Aucun preset sauvegardé'
+      listContainer.appendChild(empty)
+      return
+    }
+    for (const name of names) {
+      const item = document.createElement('div')
+      item.className = 'sp-preset-item'
+
+      const nameSpan = document.createElement('span')
+      nameSpan.className = 'sp-preset-item-name'
+      nameSpan.textContent = name
+
+      const loadBtn = document.createElement('button')
+      loadBtn.className = 'sp-preset-btn sp-preset-load'
+      loadBtn.textContent = 'Charger'
+      loadBtn.addEventListener('click', () => {
+        const cfg = presets[name]
+        for (const [key, entry] of sliderMap) {
+          const v = cfg[key]
+          if (v !== undefined && typeof v === 'number') {
+            (CONFIG as Record<string, number>)[key] = v
+            entry.input.value = String(v)
+            entry.display.textContent = fmt(v, entry.step)
+          }
+        }
+        saveConfig(allKeys)
+      })
+
+      const delBtn = document.createElement('button')
+      delBtn.className = 'sp-preset-btn sp-preset-del'
+      delBtn.textContent = '×'
+      delBtn.addEventListener('click', async () => {
+        await deletePreset(name)
+        renderPresetList()
+      })
+
+      item.appendChild(nameSpan)
+      item.appendChild(loadBtn)
+      item.appendChild(delBtn)
+      listContainer.appendChild(item)
+    }
+  }
+
+  saveBtn.addEventListener('click', async () => {
+    const name = nameInput.value.trim()
+    if (!name) return
+    saveBtn.disabled = true
+    saveBtn.textContent = '...'
+    const cfg: Record<string, number> = {}
+    for (const key of allKeys) cfg[key] = CONFIG[key] as number
+    try {
+      await savePreset(name, cfg)
+      saveBtn.textContent = '✓'
+      nameInput.value = ''
+      renderPresetList()
+    } catch {
+      saveBtn.textContent = '!'
+    } finally {
+      setTimeout(() => {
+        saveBtn.textContent = 'Sauvegarder'
+        saveBtn.disabled = false
+      }, 1200)
+    }
+  })
+
+  renderPresetList()
 }

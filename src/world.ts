@@ -137,6 +137,20 @@ export class World {
     }
     this.plants.push(...newPlants)
 
+    // Dispersion par le vent : graine aléatoire près de l'eau, indépendante de la reproduction
+    if (this.plants.length < CONFIG.PLANT_MAX_COUNT && Math.random() < CONFIG.PLANT_WIND_SPAWN_CHANCE) {
+      for (let i = 0; i < 20; i++) {
+        const pos = this.randomPos()
+        if (
+          this.biomeMap.getBiome(pos.x, pos.y) === BIOME.PRAIRIE &&
+          this.biomeMap.isNearWater(pos.x, pos.y, CONFIG.PLANT_WATER_PROXIMITY)
+        ) {
+          this.plants.push(new Plant(pos))
+          break
+        }
+      }
+    }
+
     // Rebuild grids complets pour animaux
     const allEntities: Entity[] = [...this.plants, ...this.herbivores, ...this.carnivores]
     this.plantGrid.rebuild(this.plants)
