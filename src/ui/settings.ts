@@ -182,6 +182,21 @@ const SECTIONS: Section[] = [
       },
     ],
   },
+  {
+    id: 'genetics',
+    title: '🧬 Génétique',
+    color: '#c084fc',
+    params: [
+      {
+        key: 'MUTATION_RATE', label: 'Taux de mutation', min: 0, max: 1, step: 0.05,
+        tooltip: 'Probabilité qu\'un gène soit muté lors de la reproduction. 0 = population stable et homogène, 1 = tous les gènes mutent à chaque naissance.',
+      },
+      {
+        key: 'MUTATION_STRENGTH', label: 'Force mutation', min: 0, max: 1, step: 0.05,
+        tooltip: 'Amplitude maximale d\'une mutation, en proportion de la valeur courante du gène. Ex : 0.35 = ±35% de variation par gène muté.',
+      },
+    ],
+  },
 ]
 
 function fmt(v: number, step: number): string {

@@ -103,7 +103,39 @@
     .biome-btn:hover { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.85); }
     #btn-biome-river.active  { border-color: #7dd3fc; color: #7dd3fc; background: rgba(125,211,252,0.1); }
     #btn-biome-prairie.active { border-color: #86efac; color: #86efac; background: rgba(134,239,172,0.1); }
+    #btn-inspect.active { border-color: #c4b5fd; color: #c4b5fd; background: rgba(196,181,253,0.1); }
     #main-canvas { cursor: none; }
+
+    /* ── Entity tooltip ── */
+    #entity-tooltip {
+      position: fixed; z-index: 50; width: 220px;
+      background: rgba(6,10,22,0.96);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+      padding: 12px 14px; font-size: 11px; line-height: 1.5;
+      color: rgba(255,255,255,0.75);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+      pointer-events: none; opacity: 0; transition: opacity 0.1s ease;
+    }
+    #entity-tooltip.visible { opacity: 1; }
+
+    .et-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .et-type { font-weight: 700; font-size: 12px; letter-spacing: 0.04em; }
+    .et-id { font-size: 10px; color: rgba(255,255,255,0.3); font-variant-numeric: tabular-nums; }
+
+    .et-stat-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 10px; color: rgba(255,255,255,0.5); margin-bottom: 3px; }
+    .et-bar { font-size: 9px; letter-spacing: 1px; color: rgba(255,255,255,0.5); }
+
+    .et-separator { height: 1px; background: rgba(255,255,255,0.1); margin: 7px 0; }
+
+    .et-genes-label { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 5px; }
+    .et-gene { display: flex; justify-content: space-between; align-items: center; gap: 4px; font-size: 10px; padding: 1px 0; }
+    .et-gene-label { color: rgba(255,255,255,0.5); flex: 1; }
+    .et-gene-val { font-variant-numeric: tabular-nums; color: rgba(255,255,255,0.75); min-width: 36px; text-align: right; }
+    .et-gene-delta { font-size: 9px; min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
+
+    .et-glow-row { display: flex; align-items: center; gap: 6px; font-size: 10px; }
+    .et-glow-label { color: #c4b5fd; font-weight: 600; }
+    .et-glow-bar { letter-spacing: 1px; font-size: 9px; }
 
     /* ── Settings toggle button ── */
     #settings-toggle {
@@ -351,6 +383,7 @@
         <label>Pinceau</label>
         <button id="btn-biome-river"   class="biome-btn active" title="Lac">💧</button>
         <button id="btn-biome-prairie" class="biome-btn" title="Prairie">🌾</button>
+        <button id="btn-inspect" class="biome-btn" title="Mode inspection (I)">🔍</button>
       </div>
       <div id="population-counts">
         <div>🌿 <span class="count-plant" id="cnt-plant">0</span></div>
@@ -368,6 +401,8 @@
 
   <!-- Settings panel (content built by settings.ts) -->
   <div id="settings-panel"></div>
+
+  <div id="entity-tooltip"></div>
 
   <script type="module" src="/src/main.ts"></script>
 </body>
