@@ -5,6 +5,7 @@ import { setupControls, updateCounters, SimControls } from './ui/controls'
 import { setupSettingsPanel, loadSavedConfig } from './ui/settings'
 import { setupPainter, PainterState } from './ui/painter'
 import { setupInspector } from './ui/inspector'
+import { soundHerbEat, soundCarnEat, soundReproduce, resetSoundBudgets } from './ui/sound'
 import { BIOME } from './biomeMap'
 import { CONFIG } from './config'
 
@@ -74,9 +75,18 @@ function loop(timestamp: number): void {
   if (elapsed < TICK_MS) return
   lastTime = timestamp
 
+  let herbEats = 0, carnEats = 0, matings = 0
   for (let i = 0; i < controls.speedMultiplier; i++) {
     world.update()
+    herbEats += world.herbEatCount
+    carnEats += world.carnEatCount
+    matings  += world.matingEvents.length
   }
+
+  resetSoundBudgets()
+  if (herbEats > 0) soundHerbEat(herbEats)
+  if (carnEats > 0) soundCarnEat(carnEats)
+  if (matings  > 0) soundReproduce(matings)
 
   renderer.render(world, painterState)
 

@@ -31,6 +31,8 @@ export class World {
   carnivores: Carnivore[] = []
   tick: number = 0
   matingEvents: MatingEvent[] = []
+  herbEatCount: number = 0
+  carnEatCount: number = 0
   biomeMap: BiomeMap
 
   private plantGrid = new SpatialGrid(CONFIG.CELL_SIZE)
@@ -89,6 +91,8 @@ export class World {
   update(): void {
     this.tick++
     this.matingEvents.length = 0
+    this.herbEatCount = 0
+    this.carnEatCount = 0
 
     // Rebuild plant grid en premier (positions stables depuis le tick précédent)
     this.plantGrid.rebuild(this.plants)
@@ -171,7 +175,7 @@ export class World {
 
       // Eat
       const nearbyPlants = this.plantGrid.getNeighbors(herb.pos, CONFIG.EAT_DISTANCE) as Plant[]
-      herbivoreFeed(herb, nearbyPlants.filter(p => p.type === 'plant') as Plant[])
+      if (herbivoreFeed(herb, nearbyPlants.filter(p => p.type === 'plant') as Plant[])) this.herbEatCount++
 
       // Reproduce
       const nearbyHerbs = neighbors.filter(n => n.type === 'herbivore' && !n.dead) as Herbivore[]
@@ -198,7 +202,7 @@ export class World {
       // Eat
       const nearbyHerbs = this.animalGrid.getNeighbors(carn.pos, CONFIG.EAT_DISTANCE)
         .filter(n => n.type === 'herbivore' && !n.dead) as Herbivore[]
-      carnivoreFeed(carn, nearbyHerbs)
+      if (carnivoreFeed(carn, nearbyHerbs)) this.carnEatCount++
 
       // Reproduce
       const nearbyCarnivores = neighbors.filter(n => n.type === 'carnivore' && !n.dead) as Carnivore[]
