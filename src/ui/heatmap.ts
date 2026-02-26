@@ -1,5 +1,6 @@
 const SCALE = 20      // px per heat cell
-const DECAY = 0.991   // per rendered frame (~75 s half-life at 60 fps)
+// half-life = 1 season = 1200 ticks  →  0.5^(1/1200) ≈ 0.99942
+const DECAY = 0.99942
 
 type HeatChannel = 'herb' | 'carn' | 'repro'
 

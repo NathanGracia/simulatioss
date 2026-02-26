@@ -104,8 +104,8 @@ function loop(timestamp: number): void {
     for (const e of world.herbFeedEvents) heatmap.add(e.x, e.y, 'herb')
     for (const e of world.carnFeedEvents) heatmap.add(e.x, e.y, 'carn')
     for (const e of world.matingEvents)   heatmap.add(e.x, e.y, 'repro')
+    heatmap.decay()
   }
-  heatmap.decay()
 
   resetSoundBudgets()
   if (herbEats > 0) soundHerbEat(herbEats)
