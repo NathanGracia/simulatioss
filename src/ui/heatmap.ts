@@ -1,5 +1,5 @@
 const SCALE = 20      // px per heat cell
-const DECAY = 0.984   // per rendered frame (~11 s half-life at 60 fps)
+const DECAY = 0.991   // per rendered frame (~75 s half-life at 60 fps)
 
 type HeatChannel = 'herb' | 'carn' | 'repro'
 
@@ -35,9 +35,9 @@ export class HeatmapSystem {
     const cy = (y / SCALE) | 0
     if (cx < 0 || cx >= this.cols || cy < 0 || cy >= this.rows) return
     const i = cy * this.cols + cx
-    if      (channel === 'herb')  this.herb[i]  = Math.min(1, this.herb[i]  + amount * 0.35)
-    else if (channel === 'carn')  this.carn[i]  = Math.min(1, this.carn[i]  + amount * 0.60)
-    else                          this.repro[i] = Math.min(1, this.repro[i] + amount * 0.40)
+    if      (channel === 'herb')  this.herb[i]  = Math.min(1, this.herb[i]  + amount * 0.60)
+    else if (channel === 'carn')  this.carn[i]  = Math.min(1, this.carn[i]  + amount * 0.90)
+    else                          this.repro[i] = Math.min(1, this.repro[i] + amount * 0.70)
     this.dirty = true
   }
 
@@ -54,7 +54,7 @@ export class HeatmapSystem {
     if (!this.enabled || !this.offscreen || this.cols === 0) return
     if (this.dirty) this._bake()
     ctx.save()
-    ctx.globalAlpha = 0.45
+    ctx.globalAlpha = 0.60
     ctx.imageSmoothingEnabled = true
     ctx.drawImage(this.offscreen, 0, 0, W, H)
     ctx.restore()
