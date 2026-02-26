@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PRESETS_FILE = join(__dirname, 'presets.json')
-const PORT = 3001
+const PORT = Number(process.env.PORT) || 3001
 
 function readPresets(): Record<string, unknown> {
   try {

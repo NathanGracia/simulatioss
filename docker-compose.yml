@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3001}:3001"
+    volumes:
+      # Persistance des presets entre les redémarrages
+      - ./server/presets.json:/app/server/presets.json
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
