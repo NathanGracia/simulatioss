@@ -2,11 +2,18 @@ services:
   app:
     build: .
     restart: unless-stopped
-    ports:
-      - "${PORT:-3001}:3001"
+    expose:
+      - "3001"           # pas de port public — Caddy s'en charge
     volumes:
-      # Persistance des presets entre les redémarrages
       - ./server/presets.json:/app/server/presets.json
     environment:
       - NODE_ENV=production
       - PORT=3001
+    networks:
+      web:
+        aliases:
+          - simulatioss   # Caddy peut joindre l'app via "simulatioss:3001"
+
+networks:
+  web:
+    external: true        # réseau partagé avec blindtest-films/caddy
