@@ -1,6 +1,6 @@
-const SCALE = 20      // px per heat cell
 // half-life = 1 season = 1200 ticks  →  0.5^(1/1200) ≈ 0.99942
 const DECAY = 0.99942
+const SCALE = 20  // px per heat cell
 
 type HeatChannel = 'herb' | 'carn' | 'repro'
 
@@ -12,8 +12,14 @@ export class HeatmapSystem {
   private herb  = new Float32Array(0)
   private carn  = new Float32Array(0)
   private repro = new Float32Array(0)
+
+  // rawCanvas  — reçoit le putImageData brut (tiny)
+  private rawCanvas: HTMLCanvasElement | null = null
+  private rawCtx:    CanvasRenderingContext2D | null = null
+  // offscreen  — reçoit le rendu flou pré-baked, drawImage en 1 appel
   private offscreen: HTMLCanvasElement | null = null
   private offCtx:    CanvasRenderingContext2D | null = null
+
   private dirty = false
 
   resize(W: number, H: number): void {
@@ -23,11 +29,17 @@ export class HeatmapSystem {
     this.herb  = new Float32Array(n)
     this.carn  = new Float32Array(n)
     this.repro = new Float32Array(n)
-    const c = document.createElement('canvas')
-    c.width  = this.cols
-    c.height = this.rows
-    this.offscreen = c
-    this.offCtx    = c.getContext('2d')!
+
+    const raw = document.createElement('canvas')
+    raw.width = this.cols; raw.height = this.rows
+    this.rawCanvas = raw
+    this.rawCtx    = raw.getContext('2d')!
+
+    const off = document.createElement('canvas')
+    off.width = this.cols; off.height = this.rows
+    this.offscreen = off
+    this.offCtx    = off.getContext('2d')!
+
     this.dirty = true
   }
 
@@ -62,9 +74,11 @@ export class HeatmapSystem {
   }
 
   private _bake(): void {
-    const { cols, rows, offCtx: cx } = this
-    if (!cx) return
-    const img = cx.createImageData(cols, rows)
+    const { cols, rows, rawCtx, offCtx } = this
+    if (!rawCtx || !offCtx) return
+
+    // 1. Écrire les valeurs brutes dans rawCanvas
+    const img = rawCtx.createImageData(cols, rows)
     const d   = img.data
     for (let i = 0; i < cols * rows; i++) {
       const h  = this.herb[i]
@@ -73,13 +87,21 @@ export class HeatmapSystem {
       const maxV = Math.max(h, cn, rp)
       if (maxV < 0.01) continue
       const o = i * 4
-      // herb=green  carn=red  repro=magenta
-      d[o]     = Math.min(255, ((cn + rp * 0.7) * 255) | 0)   // R
-      d[o + 1] = Math.min(255, (h * 255) | 0)                  // G
-      d[o + 2] = Math.min(255, (rp * 255) | 0)                 // B
-      d[o + 3] = Math.min(255, (maxV * 255) | 0)               // A — full intensity
+      d[o]     = Math.min(255, ((cn + rp * 0.7) * 255) | 0)   // R — carn=rouge, repro=magenta
+      d[o + 1] = Math.min(255, (h * 255) | 0)                  // G — herb=vert
+      d[o + 2] = Math.min(255, (rp * 255) | 0)                 // B — repro=rose/bleu
+      d[o + 3] = Math.min(255, (maxV * 255) | 0)
     }
-    cx.putImageData(img, 0, 0)
+    rawCtx.putImageData(img, 0, 0)
+
+    // 2. Dessiner rawCanvas → offscreen avec un flou gaussien
+    //    blur(2px) sur 96×54 ≈ blur(40px) une fois étiré à l'écran : très smooth
+    offCtx.clearRect(0, 0, cols, rows)
+    offCtx.save()
+    offCtx.filter = 'blur(2px)'
+    offCtx.drawImage(this.rawCanvas!, 0, 0)
+    offCtx.restore()
+
     this.dirty = false
   }
 }
