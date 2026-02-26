@@ -462,6 +462,69 @@
       z-index: 50;
     }
     .season-info:hover .season-tooltip { display: block; }
+
+    /* ── Genetic modal ── */
+    .gm-overlay {
+      position: fixed; inset: 0; z-index: 40;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .gm-overlay.visible { opacity: 1; pointer-events: all; }
+    .gm-panel {
+      background: rgba(5,8,18,0.96);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 20px;
+      width: min(660px, calc(100vw - 32px));
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.85);
+    }
+    .gm-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 16px;
+    }
+    .gm-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); flex: 1; }
+    .gm-legend {
+      font-size: 10px; color: rgba(255,255,255,0.35);
+      display: flex; gap: 10px; align-items: center;
+    }
+    .gm-legend span { font-size: 13px; }
+    #gm-close {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.13);
+      color: rgba(255,255,255,0.6);
+      width: 28px; height: 28px;
+      border-radius: 6px; cursor: pointer; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.12s, color 0.12s; flex-shrink: 0;
+    }
+    #gm-close:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    .gm-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 520px) { .gm-grid { grid-template-columns: repeat(2, 1fr); } }
+    .gm-graph-wrap {
+      background: rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    #btn-genetics {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: rgba(255,255,255,0.75);
+      padding: 5px 10px;
+      border-radius: 5px; cursor: pointer; font-size: 13px;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    #btn-genetics:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.25); }
   </style>
 </head>
 <body>
@@ -474,6 +537,7 @@
       <div class="row">
         <button id="btn-pause">⏸ Pause</button>
         <button id="btn-reset">↺ Reset</button>
+        <button id="btn-genetics" title="Graphes génétiques (G)">📈</button>
       </div>
       <div class="row">
         <label>Vitesse</label>
@@ -508,6 +572,21 @@
 
   <!-- Settings panel (content built by settings.ts) -->
   <div id="settings-panel"></div>
+
+  <!-- Genetic graphs modal -->
+  <div id="genetic-modal" class="gm-overlay">
+    <div class="gm-panel">
+      <div class="gm-header">
+        <span class="gm-title">🧬 Évolution génétique</span>
+        <div class="gm-legend">
+          <span style="color:#60a5fa">●</span> Herbivores
+          <span style="color:#fb923c">●</span> Carnivores
+        </div>
+        <button id="gm-close">×</button>
+      </div>
+      <div class="gm-grid"></div>
+    </div>
+  </div>
 
   <div id="entity-tooltip"></div>
 

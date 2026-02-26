@@ -5,6 +5,7 @@ import { setupControls, updateCounters, updateSeason, SimControls } from './ui/c
 import { setupSettingsPanel, loadSavedConfig } from './ui/settings'
 import { setupPainter, PainterState } from './ui/painter'
 import { setupInspector, TrackState } from './ui/inspector'
+import { GeneticHistory, setupGeneticModal } from './ui/geneticGraph'
 import { soundHerbEat, soundCarnEat, soundReproduce, resetSoundBudgets } from './ui/sound'
 import { BIOME } from './biomeMap'
 import { CONFIG } from './config'
@@ -53,6 +54,10 @@ const painterState: PainterState = {
 setupPainter(canvas, world.biomeMap, painterState)
 const track: TrackState = setupInspector(canvas, world, painterState)
 
+const geneHistory = new GeneticHistory()
+const geneModal   = setupGeneticModal(geneHistory)
+document.getElementById('btn-genetics')!.addEventListener('click', () => geneModal.toggle())
+
 let lastTime = 0
 const TICK_MS = 1000 / CONFIG.TARGET_FPS
 const STATS_INTERVAL = 5
@@ -98,6 +103,8 @@ function loop(timestamp: number): void {
     stats.render()
     updateCounters(pop.plants, pop.herbivores, pop.carnivores)
     updateSeason(world.season.season, world.season.progress)
+    geneHistory.record(world)
+    geneModal.render()
   }
 }
 
