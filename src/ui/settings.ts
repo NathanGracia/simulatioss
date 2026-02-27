@@ -607,4 +607,12 @@ export function setupSettingsPanel(onReset: () => void): void {
   })
 
   renderPresetList()
+
+  const footer = document.createElement('a')
+  footer.href = 'https://nathangracia.com'
+  footer.target = '_blank'
+  footer.rel = 'noopener'
+  footer.className = 'sp-footer-link'
+  footer.textContent = '← nathangracia.com'
+  panel.appendChild(footer)
 }

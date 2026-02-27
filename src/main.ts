@@ -13,6 +13,7 @@ import { GeneticHistory, setupGeneticModal } from './ui/geneticGraph'
 import { HeatmapSystem } from './ui/heatmap'
 import { soundHerbEat, soundCarnEat, soundReproduce, resetSoundBudgets } from './ui/sound'
 import { fetchPresets } from './ui/presets'
+import { showSeedBanner } from './ui/seedBanner'
 import { BIOME } from './biomeMap'
 import { CONFIG } from './config'
 
@@ -41,6 +42,7 @@ async function applyMainPreset(): Promise<void> {
 // 3. Tout le reste s'initialise après le preset
 ;(async () => {
   await applyMainPreset()
+  showSeedBanner() // fire-and-forget, affiche la seed lava-lamp si token configuré
 
   const world = new World(window.innerWidth, window.innerHeight)
   const heatmap = new HeatmapSystem()
